@@ -3,6 +3,12 @@ var _ = require("underscore");
 var path = require("path");
 var loaderUtils = require("loader-utils");
 
+var deleteTemplateById = function(id) {
+    Twig.extend(function(Twig) {
+        delete Twig.Templates.registry[id];
+    });
+};
+
 Twig.extend(function(Twig) {
     var compiler = Twig.compiler;
 
@@ -64,7 +70,15 @@ Twig.extend(function(Twig) {
 module.exports = function(source) {
     var id = require.resolve(this.resource),
         tpl;
+    var loaderOptions = loaderUtils.parseQuery(this.query);
+    var templatesCache = loaderOptions.cache || false;
+
     this.cacheable && this.cacheable();
+
+    // clear cached template
+    if (!templatesCache) {
+        deleteTemplateById(id);
+    }
 
     // check if template already exists
     tpl = Twig.twig({ ref: id });
